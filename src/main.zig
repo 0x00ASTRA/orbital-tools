@@ -3,6 +3,9 @@ const rl = @import("raylib");
 const rg = @import("raygui");
 const obt = @import("orbits");
 
+const font_data = @embedFile("assets/fonts/nasalization/Nasalization.otf");
+const atmo_shader_src = @embedFile("assets/shaders/atmo.fs");
+
 pub fn main(init: std.process.Init) anyerror!void {
     const io = init.io;
     _ = io;
@@ -58,9 +61,8 @@ pub fn main(init: std.process.Init) anyerror!void {
 
     rl.initWindow(screen_width, screen_height, "Resonant Orbit Planner");
     defer rl.closeWindow();
+    std.debug.print("window initialized\n", .{});
 
-    const font = try rl.loadFont("assets/fonts/nasalization/Nasalization.otf");
-    defer rl.unloadFont(font);
     var font_size: f32 = 32.0;
     var font_size_edit: bool = false;
     var font_size_txt: [3:0]u8 = undefined;
@@ -72,10 +74,15 @@ pub fn main(init: std.process.Init) anyerror!void {
     _ = std.fmt.bufPrintSentinel(&font_spacing_txt, "{d:.0}", .{font_spacing}, 0) catch {};
 
     rl.setTargetFPS(60);
+    std.debug.print("Set Target FPS to 60\n", .{});
     rg.loadStyleDefault();
+    std.debug.print("Default Style Loaded\n", .{});
+    const font = rl.loadFontFromMemory(".otf", font_data, 32, null) catch @panic("Failed to load Font");
+    std.debug.print("\x1b[32mfont loaded: glyphs={d}\x1b[0m\n", .{font.glyphCount});
+    defer rl.unloadFont(font);
     rg.setFont(font);
 
-    const atmo_shader = try rl.loadShader(null, "assets/shaders/atmo.fs");
+    const atmo_shader = rl.loadShaderFromMemory(null, atmo_shader_src) catch @panic("Failed to load atmosphere shader");
     defer rl.unloadShader(atmo_shader);
 
     rg.setStyle(.default, .{ .default = .text_size }, 24);

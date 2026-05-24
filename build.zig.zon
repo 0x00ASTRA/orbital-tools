@@ -7,6 +7,6 @@
             .hash = "raylib_zig-6.0.0-KE8REP50BQAnAeQmpP4qVDsFgX5yKKnjnkAn6RnYUjR7",
         },
     },
-    .paths = .{""},
+    .paths = .{ "src/", "assets/", "test/" },
     .fingerprint = 0xe7d4d1e427c67653,
 }
