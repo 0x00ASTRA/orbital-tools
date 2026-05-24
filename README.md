@@ -68,7 +68,7 @@ Pre-built binaries are attached to each [release](https://github.com/0x00ASTRA/O
 |----------|------|
 | Linux x86_64 | `OrbitalTools-linux-x86_64` |
 | Windows x86_64 | `OrbitalTools-windows-x86_64.exe` |
-| macOS aarch64 | `OrbitalTools-macos-aarch64` |
+
 
 ---
 

@@ -18,6 +18,7 @@ jobs:
               PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig
               zig build -Dtarget=x86_64-linux-gnu -Doptimize=ReleaseFast
               --search-prefix /usr
+              --search-prefix /usr/lib/x86_64-linux-gnu
 
           - os: windows-latest
             artifact_name: OrbitalTools.exe
