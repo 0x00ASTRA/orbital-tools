@@ -53,6 +53,13 @@ jobs:
             wayland-protocols \
             libwayland-bin
 
+      - name: Debug library paths
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          find /usr -name "libGL*" 2>/dev/null
+          find /usr -name "libX11*" 2>/dev/null
+          find /usr -name "libwayland-client*" 2>/dev/null
+
       - name: Build
         run: ${{ matrix.build_cmd }}
 
