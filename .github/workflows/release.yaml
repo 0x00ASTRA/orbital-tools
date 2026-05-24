@@ -55,6 +55,7 @@ jobs:
             libwayland-bin
 
       - name: Build
+        PKG_CONFIG_PATH: /usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig
         run: zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseFast
 
       - name: Upload artifact
