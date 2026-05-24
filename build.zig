@@ -24,6 +24,7 @@ pub fn build(b: *std.Build) void {
 
     const exe = b.addExecutable(.{
         .name = "OrbitalTools",
+        .version = .{ .major = 1, .minor = 0, .patch = 0, .build = "release" },
         .root_module = b.addModule("root_mod", .{
             .target = target,
             .optimize = optimize,
