@@ -1,0 +1,79 @@
+# .github/workflows/release.yml
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-linux-gnu
+            artifact_name: OrbitalTools
+            asset_name: OrbitalTools-linux-x86_64
+
+          - os: windows-latest
+            target: x86_64-windows-gnu
+            artifact_name: OrbitalTools.exe
+            asset_name: OrbitalTools-windows-x86_64.exe
+
+          - os: macos-latest
+            target: aarch64-macos
+            artifact_name: OrbitalTools
+            asset_name: OrbitalTools-macos-aarch64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgl1-mesa-dev \
+            libx11-dev \
+            libxrandr-dev \
+            libxinerama-dev \
+            libxcursor-dev \
+            libxi-dev \
+            libxext-dev \
+            libwayland-dev \
+            libxkbcommon-dev
+
+      - name: Build
+        run: zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseFast
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: zig-out/bin/${{ matrix.artifact_name }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
