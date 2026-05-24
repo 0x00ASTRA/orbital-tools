@@ -36,29 +36,33 @@ jobs:
           version: 0.16.0
 
       - name: Install Linux dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            pkg-config \
-            libgl1-mesa-dev \
-            libx11-dev \
-            libxrandr-dev \
-            libxinerama-dev \
-            libxcursor-dev \
-            libxi-dev \
-            libxext-dev \
-            libwayland-dev \
-            libxkbcommon-dev \
-            wayland-protocols \
-            libwayland-bin
-
-      - name: Debug library paths
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          find /usr -name "libGL*" 2>/dev/null
-          find /usr -name "libX11*" 2>/dev/null
-          find /usr -name "libwayland-client*" 2>/dev/null
+              if: matrix.os == 'ubuntu-latest'
+              run: |
+                sudo apt-get update
+                sudo apt-get install -y \
+                  pkg-config \
+                  libgl1-mesa-dev \
+                  libx11-dev \
+                  libxrandr-dev \
+                  libxinerama-dev \
+                  libxcursor-dev \
+                  libxi-dev \
+                  libxext-dev \
+                  libwayland-dev \
+                  libxkbcommon-dev \
+                  wayland-protocols \
+                  libwayland-bin
+                # Symlink multiarch libs to /usr/lib so Zig can find them
+                sudo ln -sf /usr/lib/x86_64-linux-gnu/libGL.so /usr/lib/libGL.so
+                sudo ln -sf /usr/lib/x86_64-linux-gnu/libX11.so /usr/lib/libX11.so
+                sudo ln -sf /usr/lib/x86_64-linux-gnu/libXrandr.so /usr/lib/libXrandr.so
+                sudo ln -sf /usr/lib/x86_64-linux-gnu/libXinerama.so /usr/lib/libXinerama.so
+                sudo ln -sf /usr/lib/x86_64-linux-gnu/libXi.so /usr/lib/libXi.so
+                sudo ln -sf /usr/lib/x86_64-linux-gnu/libXcursor.so /usr/lib/libXcursor.so
+                sudo ln -sf /usr/lib/x86_64-linux-gnu/libwayland-client.so /usr/lib/libwayland-client.so
+                sudo ln -sf /usr/lib/x86_64-linux-gnu/libwayland-cursor.so /usr/lib/libwayland-cursor.so
+                sudo ln -sf /usr/lib/x86_64-linux-gnu/libwayland-egl.so /usr/lib/libwayland-egl.so
+                sudo ln -sf /usr/lib/x86_64-linux-gnu/libxkbcommon.so /usr/lib/libxkbcommon.so
 
       - name: Build
         run: ${{ matrix.build_cmd }}
