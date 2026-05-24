@@ -16,7 +16,7 @@ jobs:
             asset_name: OrbitalTools-linux-x86_64
             build_cmd: >-
               PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig
-              zig build -Dtarget=x86_64-linux-gnu -Doptimize=ReleaseFast
+              zig build -Doptimize=ReleaseFast
               --search-prefix /usr
               --search-prefix /usr/lib/x86_64-linux-gnu
 
