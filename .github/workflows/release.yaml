@@ -28,8 +28,10 @@ jobs:
             artifact_name: OrbitalTools
             asset_name: OrbitalTools-macos-aarch64
             build_cmd: >-
-              zig build -Dtarget=aarch64-macos -Doptimize=ReleaseFast
-              --sysroot "$(xcrun --sdk macosx --show-sdk-path)"
+                zig build -Dtarget=aarch64-macos -Doptimize=ReleaseFast
+                --sysroot "$(xcrun --sdk macosx --show-sdk-path)"
+                -Doptimize=ReleaseFast
+                --framework-dir "$(xcrun --sdk macosx --show-sdk-path)/System/Library/Frameworks"
 
     runs-on: ${{ matrix.os }}
 
