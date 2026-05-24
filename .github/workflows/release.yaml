@@ -12,19 +12,23 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            target: x86_64-linux-gnu
             artifact_name: OrbitalTools
             asset_name: OrbitalTools-linux-x86_64
+            build_cmd: >-
+              PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig
+              zig build -Dtarget=x86_64-linux-gnu -Doptimize=ReleaseFast
 
           - os: windows-latest
-            target: x86_64-windows-gnu
             artifact_name: OrbitalTools.exe
             asset_name: OrbitalTools-windows-x86_64.exe
+            build_cmd: zig build -Dtarget=x86_64-windows-gnu -Doptimize=ReleaseFast
 
           - os: macos-latest
-            target: aarch64-macos
             artifact_name: OrbitalTools
             asset_name: OrbitalTools-macos-aarch64
+            build_cmd: >-
+              zig build -Dtarget=aarch64-macos -Doptimize=ReleaseFast
+              --sysroot "$(xcrun --sdk macosx --show-sdk-path)"
 
     runs-on: ${{ matrix.os }}
 
@@ -55,9 +59,7 @@ jobs:
             libwayland-bin
 
       - name: Build
-        env:
-          PKG_CONFIG_PATH: /usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig
-        run: zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseFast
+        run: ${{ matrix.build_cmd }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
