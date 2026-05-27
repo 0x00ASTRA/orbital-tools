@@ -33,8 +33,8 @@ pub fn drawView(s: *state.AppState) !void {
     const t_orbit = s.targetOrbit();
     const res_orbit = s.resonantOrbit();
 
-    const targ_color: rl.Color = if ((planet_r + (@as(f32, @floatCast(s.targ_alt * scale))) <= atmo_r) or (blk: {
-        if (s.soi_radius) |soi| break :blk @as(f32, @floatCast(s.targ_alt * scale)) > soi;
+    const targ_color: rl.Color = if ((planet_r + (@as(f32, @floatCast(s.pe * scale))) <= atmo_r) or (blk: {
+        if (s.soi_radius) |soi| break :blk @as(f32, @floatCast(s.ap * scale)) > soi;
         break :blk false;
     })) .red else .green;
     const res_color: rl.Color = if ((targ_color.toInt() == rl.Color.red.toInt()) or (blk: {
@@ -46,24 +46,19 @@ pub fn drawView(s: *state.AppState) !void {
     })) .red else .orange;
 
     // ── Background Starfield ──────────────────────────────────────────────
-    // Calculate accurate view vectors from the camera state
     const cam_forward = rl.Vector3.normalize(rl.Vector3.subtract(s.camera.target, s.camera.position));
 
-    // Recompute stable up vector matching your billboard logic
     const base_right = rl.Vector3.normalize(rl.Vector3.crossProduct(cam_forward, .{ .x = 0, .y = 1, .z = 0 }));
     const dynamic_up = rl.Vector3.normalize(rl.Vector3.crossProduct(base_right, cam_forward));
 
-    // Get Uniform Locations
     const star_res_loc = rl.getShaderLocation(s.backdrop_shader, "resolution");
     const star_fwd_loc = rl.getShaderLocation(s.backdrop_shader, "cam_forward");
     const star_up_loc = rl.getShaderLocation(s.backdrop_shader, "cam_up");
 
-    // Pass Camera vectors to the background shader
     rl.setShaderValue(s.backdrop_shader, star_res_loc, &[2]f32{ sw, sh }, .vec2);
     rl.setShaderValue(s.backdrop_shader, star_fwd_loc, &[3]f32{ cam_forward.x, cam_forward.y, cam_forward.z }, .vec3);
     rl.setShaderValue(s.backdrop_shader, star_up_loc, &[3]f32{ dynamic_up.x, dynamic_up.y, dynamic_up.z }, .vec3);
 
-    // Draw full-screen backdrop rectangle
     rl.beginShaderMode(s.backdrop_shader);
     rl.drawRectangle(0, 0, s.screen_width, s.screen_height, .white);
     rl.endShaderMode();
@@ -76,8 +71,7 @@ pub fn drawView(s: *state.AppState) !void {
     rl.drawSphereEx(planet_pos, planet_r, 64, 64, draw.bodyColor(s.body));
     if (s.show_lines) rl.drawSphereWires(planet_pos, planet_r + 0.1, 32, 32, .black);
 
-    const targ_r = @as(f64, @floatCast(planet_r)) + @as(f64, s.targ_alt) * @as(f64, scale);
-    draw.drawOrbit3D(targ_r, 0.0, s.incl, 0.0, 0.0, 1.0, targ_color, 128);
+    draw.drawOrbit3D(t_orbit.semi_major_axis * scale, t_orbit.eccentricity, s.incl, 0.0, 0.0, 1.0, targ_color, 128);
 
     rl.drawLine3D(.{ .x = 0.0, .y = planet_r, .z = 0.0 }, .{ .x = 0.0, .y = planet_r + 5.0, .z = 0.0 }, .red);
     rl.drawLine3D(.{ .x = 0.0, .y = -planet_r, .z = 0.0 }, .{ .x = 0.0, .y = -planet_r - 5.0, .z = 0.0 }, .blue);
@@ -148,6 +142,4 @@ pub fn drawView(s: *state.AppState) !void {
     try ui.drawRightPanel(s, rp_x, rp_y, row);
 
     try ui.drawBottomBar(s, res_color, targ_color, col, col2, col3, bot_y);
-
-    _ = t_orbit;
 }

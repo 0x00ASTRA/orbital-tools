@@ -101,15 +101,18 @@ pub fn drawRightPanel(s: *state.AppState, rp_x: f32, rp_y: f32, row: f32) !void 
         s.body = try bodyIdToBody(s.selected_system, s.selected_body);
     }
 
-    if (rg.valueBoxFloat(.init(rp_x, rp_y + row, 200, 32), "Target Orbit (m): ", &s.vbf_txt, &s.targ_alt, s.edit_mode) == 1 and !s.ps_edit_mode) {
-        s.edit_mode = !s.edit_mode;
+    if (rg.valueBoxFloat(.init(rp_x, rp_y + row, 200, 32), "Target Ap (m): ", &s.ap_txt, &s.ap, s.edit_ap) == 1 and !s.ps_edit_mode) {
+        s.edit_ap = !s.edit_ap;
+    }
+    if (rg.valueBoxFloat(.init(rp_x, rp_y + row * 2, 200, 32), "Target Pe (m): ", &s.pe_txt, &s.pe, s.edit_pe) == 1 and !s.ps_edit_mode) {
+        s.edit_pe = !s.edit_pe;
     }
 
-    if (rg.valueBoxFloat(.init(rp_x, rp_y + row * 2, 80, 32), "Antecedent: ", &s.antecedent_txt, &s.t_antecedent, s.edit_antecedent) == 1 and !s.ps_edit_mode) {
+    if (rg.valueBoxFloat(.init(rp_x, rp_y + row * 3, 80, 32), "Antecedent: ", &s.antecedent_txt, &s.t_antecedent, s.edit_antecedent) == 1 and !s.ps_edit_mode) {
         s.edit_antecedent = !s.edit_antecedent;
     }
 
-    if (rg.valueBoxFloat(.init(rp_x, rp_y + row * 3, 80, 32), "Consequent: ", &s.consequent_txt, &s.t_consequent, s.edit_consequent) == 1 and !s.ps_edit_mode) {
+    if (rg.valueBoxFloat(.init(rp_x, rp_y + row * 4, 80, 32), "Consequent: ", &s.consequent_txt, &s.t_consequent, s.edit_consequent) == 1 and !s.ps_edit_mode) {
         s.edit_consequent = !s.edit_consequent;
         if (s.t_consequent >= s.t_antecedent) {
             s.t_consequent = s.t_antecedent - 1;
@@ -121,11 +124,11 @@ pub fn drawRightPanel(s: *state.AppState, rp_x: f32, rp_y: f32, row: f32) !void 
         }
     }
 
-    if (rg.checkBox(.init(rp_x, rp_y + row * 4, 24, 24), "Dive Orbit", &s.dive_orbit)) {}
+    if (rg.checkBox(.init(rp_x, rp_y + row * 5, 24, 24), "Dive Orbit", &s.dive_orbit)) {}
 
     if (s.view_mode == .planner_3d) {
-        if (rg.checkBox(.init(rp_x, rp_y + row * 6, 24, 24), "Show Lines", &s.show_lines)) {}
-        if (rg.valueBoxFloat(.init(rp_x, rp_y + row * 5, 80, 32), "Inclination", &s.incl_txt, &s.incl, s.edit_incl) == 1 and !s.ps_edit_mode) {
+        if (rg.checkBox(.init(rp_x, rp_y + row * 7, 24, 24), "Show Lines", &s.show_lines)) {}
+        if (rg.valueBoxFloat(.init(rp_x, rp_y + row * 6, 80, 32), "Inclination", &s.incl_txt, &s.incl, s.edit_incl) == 1 and !s.ps_edit_mode) {
             s.edit_incl = !s.edit_incl;
             if (s.incl < -359.99 or s.incl > 359.99) {
                 s.incl = 0;

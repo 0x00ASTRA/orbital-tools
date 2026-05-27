@@ -43,11 +43,14 @@ pub const AppState = struct {
     ps_edit_mode: bool,
 
     // Orbit inputs
-    targ_alt: f32,
+    ap: f32,
+    pe: f32,
     incl: f32,
     incl_txt: [6:0]u8,
-    vbf_txt: [256:0]u8,
-    edit_mode: bool,
+    ap_txt: [256:0]u8,
+    pe_txt: [256:0]u8,
+    edit_ap: bool,
+    edit_pe: bool,
     t_antecedent: f32,
     t_consequent: f32,
     antecedent_txt: [3:0]u8,
@@ -102,11 +105,14 @@ pub const AppState = struct {
             .body = .kerbin,
             .ps_edit_mode = false,
 
-            .targ_alt = 95_000.0,
+            .ap = 95_000.0,
+            .pe = 95_000.0,
             .incl = 0.0,
             .incl_txt = std.mem.zeroes([6:0]u8),
-            .vbf_txt = std.mem.zeroes([256:0]u8),
-            .edit_mode = false,
+            .ap_txt = std.mem.zeroes([256:0]u8),
+            .pe_txt = std.mem.zeroes([256:0]u8),
+            .edit_ap = false,
+            .edit_pe = false,
             .t_antecedent = 3.0,
             .t_consequent = 2.0,
             .antecedent_txt = std.mem.zeroes([3:0]u8),
@@ -137,7 +143,8 @@ pub const AppState = struct {
             .cam_pos_y = 0,
         };
 
-        _ = std.fmt.bufPrintSentinel(&state.vbf_txt, "{d:.1}", .{state.targ_alt}, 0) catch {};
+        _ = std.fmt.bufPrintSentinel(&state.ap_txt, "{d:.1}", .{state.ap}, 0) catch {};
+        _ = std.fmt.bufPrintSentinel(&state.pe_txt, "{d:.1}", .{state.pe}, 0) catch {};
         _ = std.fmt.bufPrintSentinel(&state.antecedent_txt, "{d:.0}", .{state.t_antecedent}, 0) catch {};
         _ = std.fmt.bufPrintSentinel(&state.consequent_txt, "{d:.0}", .{state.t_consequent}, 0) catch {};
         _ = std.fmt.bufPrintSentinel(&state.font_size_txt, "{d:.0}", .{state.font_size}, 0) catch {};
@@ -150,8 +157,8 @@ pub const AppState = struct {
     pub fn targetOrbit(self: *const AppState) obt.OrbitalParams {
         return obt.OrbitalParams.initSimple(
             self.body,
-            @as(f64, @floatCast(self.targ_alt)),
-            @as(f64, @floatCast(self.targ_alt)),
+            @as(f64, @floatCast(self.ap)),
+            @as(f64, @floatCast(self.pe)),
             0,
         );
     }

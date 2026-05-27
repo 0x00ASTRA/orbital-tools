@@ -110,14 +110,17 @@ pub fn drawView(s: *state.AppState) !void {
     }
 
     // ── Target Orbit ──────────────────────────────────────────────────────
-    const targ_color: rl.Color = if ((radius + (@as(f32, @floatCast(s.targ_alt * scale))) <= atmo_radius) or (blk: {
-        if (s.soi_radius) |soi| break :blk @as(f32, @floatCast(s.targ_alt * scale)) > soi;
+    const targ_color: rl.Color = if ((radius + (@as(f32, @floatCast(s.pe * scale))) <= atmo_radius) or (blk: {
+        if (s.soi_radius) |soi| break :blk @as(f32, @floatCast(s.ap * scale)) > soi;
         break :blk false;
     })) .red else .green;
 
-    const t_radius = @as(f32, @floatCast(radius + (s.targ_alt * scale)));
-    segments = draw.calculateSegments(t_radius);
-    rl.drawRing(body_center_rl, t_radius, t_radius + 2.5, 0.0, 360.0, segments, targ_color);
+    const t_offset = t_orbit.semi_major_axis * t_orbit.eccentricity;
+    const t_y: f32 = @floatCast(t_offset * scale);
+    const t_center = rl.Vector2{ .x = body_center_rl.x, .y = body_center_rl.y + t_y };
+    const t_semi_min: f32 = @floatCast(t_orbit.semi_major_axis * std.math.sqrt(1.0 - t_orbit.eccentricity * t_orbit.eccentricity) * scale);
+    segments = draw.calculateSegments(@as(f32, @floatCast(t_orbit.semi_major_axis * scale)));
+    draw.drawEllipseLines(t_center, t_semi_min, @as(f32, @floatCast(t_orbit.semi_major_axis * scale)), segments, targ_color);
 
     // ── Resonant Orbit ────────────────────────────────────────────────────
     const res_offset = res_orbit.semi_major_axis * res_orbit.eccentricity;
@@ -141,8 +144,6 @@ pub fn drawView(s: *state.AppState) !void {
 
     // ── Bottom Bar ────────────────────────────────────────────────────────
     try ui.drawBottomBar(s, res_color, targ_color, col, col2, col3, bot_y);
-
-    _ = t_orbit;
 }
 
 fn Vec2(comptime T: type) type {
