@@ -10,6 +10,7 @@ const planner_3d = @import("views/planner_3d.zig");
 const font_data = @embedFile("assets/fonts/nasalization/Nasalization.otf");
 const atmo2d_shader_src = @embedFile("assets/shaders/atmo2d.fs");
 const atmo3d_shader_src = @embedFile("assets/shaders/atmo3d.fs");
+const backdrop_shader_src = @embedFile("assets/shaders/backdrop.fs");
 
 pub fn main(init: std.process.Init) anyerror!void {
     const io = init.io;
@@ -29,6 +30,8 @@ pub fn main(init: std.process.Init) anyerror!void {
     defer rl.unloadShader(atmo2d_shader);
     const atmo3d_shader = rl.loadShaderFromMemory(null, atmo3d_shader_src) catch @panic("Failed to load atmosphere 3D shader");
     defer rl.unloadShader(atmo3d_shader);
+    const backdrop_shader = rl.loadShaderFromMemory(null, backdrop_shader_src) catch @panic("Failed to load backdrop shader");
+    defer rl.unloadShader(backdrop_shader);
 
     rl.setTargetFPS(60);
     rg.loadStyleDefault();
@@ -38,7 +41,7 @@ pub fn main(init: std.process.Init) anyerror!void {
     rg.setStyle(.default, .{ .default = .text_size }, 24);
     defer rg.setStyle(.default, .{ .default = .text_size }, original_size);
 
-    var s = state.AppState.init(font, atmo2d_shader, atmo3d_shader);
+    var s = state.AppState.init(font, atmo2d_shader, atmo3d_shader, backdrop_shader);
 
     while (!rl.windowShouldClose()) {
         // Update active view

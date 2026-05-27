@@ -45,6 +45,29 @@ pub fn drawView(s: *state.AppState) !void {
         break :blk false;
     })) .red else .orange;
 
+    // ── Background Starfield ──────────────────────────────────────────────
+    // Calculate accurate view vectors from the camera state
+    const cam_forward = rl.Vector3.normalize(rl.Vector3.subtract(s.camera.target, s.camera.position));
+
+    // Recompute stable up vector matching your billboard logic
+    const base_right = rl.Vector3.normalize(rl.Vector3.crossProduct(cam_forward, .{ .x = 0, .y = 1, .z = 0 }));
+    const dynamic_up = rl.Vector3.normalize(rl.Vector3.crossProduct(base_right, cam_forward));
+
+    // Get Uniform Locations
+    const star_res_loc = rl.getShaderLocation(s.backdrop_shader, "resolution");
+    const star_fwd_loc = rl.getShaderLocation(s.backdrop_shader, "cam_forward");
+    const star_up_loc = rl.getShaderLocation(s.backdrop_shader, "cam_up");
+
+    // Pass Camera vectors to the background shader
+    rl.setShaderValue(s.backdrop_shader, star_res_loc, &[2]f32{ sw, sh }, .vec2);
+    rl.setShaderValue(s.backdrop_shader, star_fwd_loc, &[3]f32{ cam_forward.x, cam_forward.y, cam_forward.z }, .vec3);
+    rl.setShaderValue(s.backdrop_shader, star_up_loc, &[3]f32{ dynamic_up.x, dynamic_up.y, dynamic_up.z }, .vec3);
+
+    // Draw full-screen backdrop rectangle
+    rl.beginShaderMode(s.backdrop_shader);
+    rl.drawRectangle(0, 0, s.screen_width, s.screen_height, .white);
+    rl.endShaderMode();
+
     // ── 3D Scene ──────────────────────────────────────────────────────────
     rl.beginMode3D(s.camera);
 
