@@ -29,7 +29,10 @@ pub const AppState = struct {
     font_spacing_edit: bool,
     font_size_txt: [3:0]u8,
     font_spacing_txt: [3:0]u8,
-    atmo_shader: rl.Shader,
+    atmo2d_shader: rl.Shader,
+    atmo3d_shader: rl.Shader,
+    billboard_img: rl.Image,
+    billboard_tex: rl.Texture,
 
     // Body selection
     selected_system: i32,
@@ -66,7 +69,8 @@ pub const AppState = struct {
     cam_pos_x: f32,
     cam_pos_y: f32,
 
-    pub fn init(font: rl.Font, atmo_shader: rl.Shader) AppState {
+    pub fn init(font: rl.Font, atmo2d_shader: rl.Shader, atmo3d_shader: rl.Shader) AppState {
+        const img = rl.genImageColor(256, 256, .white);
         var state = AppState{
             .width_edit = false,
             .height_edit = false,
@@ -82,7 +86,10 @@ pub const AppState = struct {
             .font_spacing_edit = false,
             .font_size_txt = std.mem.zeroes([3:0]u8),
             .font_spacing_txt = std.mem.zeroes([3:0]u8),
-            .atmo_shader = atmo_shader,
+            .atmo2d_shader = atmo2d_shader,
+            .atmo3d_shader = atmo3d_shader,
+            .billboard_img = img,
+            .billboard_tex = rl.Texture.fromImage(img) catch @panic("failed to load billboard texture"),
 
             .selected_system = 0,
             .last_selected_system = 0,

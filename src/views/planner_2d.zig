@@ -25,7 +25,7 @@ pub fn drawView(s: *state.AppState) !void {
     const row: f32 = 48.0;
 
     const bot_y: i32 = s.screen_height - 160;
-    const col: i32  = @intFromFloat(sw * 0.05);
+    const col: i32 = @intFromFloat(sw * 0.05);
     const col2: i32 = @intFromFloat(sw * 0.3);
     const col3: i32 = @intFromFloat(sw * 0.55);
 
@@ -44,19 +44,20 @@ pub fn drawView(s: *state.AppState) !void {
     const radius: f32 = @floatCast(params.radius * scale);
     const atmo_radius: f32 = if (params.atmosphere_height) |atm_h|
         @floatCast((params.radius * scale) + (atm_h * scale))
-    else 0;
+    else
+        0;
 
     const t_orbit = s.targetOrbit();
     const res_orbit = s.resonantOrbit();
 
     // ── Shader uniforms ───────────────────────────────────────────────────
-    const loc_center     = rl.getShaderLocation(s.atmo_shader, "center");
-    const loc_radius     = rl.getShaderLocation(s.atmo_shader, "radius");
-    const loc_atmo_size  = rl.getShaderLocation(s.atmo_shader, "atmo_size");
-    const loc_atmo_color = rl.getShaderLocation(s.atmo_shader, "atmo_color");
-    const loc_resolution = rl.getShaderLocation(s.atmo_shader, "resolution");
+    const loc_center = rl.getShaderLocation(s.atmo2d_shader, "center");
+    const loc_radius = rl.getShaderLocation(s.atmo2d_shader, "radius");
+    const loc_atmo_size = rl.getShaderLocation(s.atmo2d_shader, "atmo_size");
+    const loc_atmo_color = rl.getShaderLocation(s.atmo2d_shader, "atmo_color");
+    const loc_resolution = rl.getShaderLocation(s.atmo2d_shader, "resolution");
 
-    rl.setShaderValue(s.atmo_shader, loc_resolution, &[2]f32{
+    rl.setShaderValue(s.atmo2d_shader, loc_resolution, &[2]f32{
         @floatFromInt(s.screen_width),
         @floatFromInt(s.screen_height),
     }, .vec2);
@@ -75,11 +76,11 @@ pub fn drawView(s: *state.AppState) !void {
             @as(f32, @floatFromInt(color.b)) / 255.0,
             0.6,
         };
-        rl.setShaderValue(s.atmo_shader, loc_center, &center_val, .vec2);
-        rl.setShaderValue(s.atmo_shader, loc_radius, &radius, .float);
-        rl.setShaderValue(s.atmo_shader, loc_atmo_size, &atmo_size_val, .float);
-        rl.setShaderValue(s.atmo_shader, loc_atmo_color, &color_val, .vec4);
-        rl.beginShaderMode(s.atmo_shader);
+        rl.setShaderValue(s.atmo2d_shader, loc_center, &center_val, .vec2);
+        rl.setShaderValue(s.atmo2d_shader, loc_radius, &radius, .float);
+        rl.setShaderValue(s.atmo2d_shader, loc_atmo_size, &atmo_size_val, .float);
+        rl.setShaderValue(s.atmo2d_shader, loc_atmo_color, &color_val, .vec4);
+        rl.beginShaderMode(s.atmo2d_shader);
         rl.drawRectangle(0, 0, s.screen_width, s.screen_height, .white);
         rl.endShaderMode();
     }
@@ -101,9 +102,9 @@ pub fn drawView(s: *state.AppState) !void {
     rl.drawRing(body_center_rl, t_radius, t_radius + 2.5, 0.0, 360.0, segments, targ_color);
 
     // ── Resonant Orbit ────────────────────────────────────────────────────
-    const res_offset  = res_orbit.semi_major_axis * res_orbit.eccentricity;
-    const res_y: f32  = @floatCast(res_offset * scale);
-    const res_center  = rl.Vector2{ .x = body_center_rl.x, .y = body_center_rl.y + res_y };
+    const res_offset = res_orbit.semi_major_axis * res_orbit.eccentricity;
+    const res_y: f32 = @floatCast(res_offset * scale);
+    const res_center = rl.Vector2{ .x = body_center_rl.x, .y = body_center_rl.y + res_y };
     const res_semi_min: f32 = @floatCast(res_orbit.semi_major_axis * std.math.sqrt(1.0 - res_orbit.eccentricity * res_orbit.eccentricity) * scale);
     segments = draw.calculateSegments(@as(f32, @floatCast(res_orbit.semi_major_axis * scale)));
 

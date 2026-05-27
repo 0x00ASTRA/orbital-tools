@@ -8,7 +8,8 @@ const planner_2d = @import("views/planner_2d.zig");
 const planner_3d = @import("views/planner_3d.zig");
 
 const font_data = @embedFile("assets/fonts/nasalization/Nasalization.otf");
-const atmo_shader_src = @embedFile("assets/shaders/atmo.fs");
+const atmo2d_shader_src = @embedFile("assets/shaders/atmo2d.fs");
+const atmo3d_shader_src = @embedFile("assets/shaders/atmo3d.fs");
 
 pub fn main(init: std.process.Init) anyerror!void {
     const io = init.io;
@@ -24,8 +25,10 @@ pub fn main(init: std.process.Init) anyerror!void {
     const font = rl.loadFontFromMemory(".otf", font_data, 32, null) catch @panic("Failed to load Font");
     defer rl.unloadFont(font);
 
-    const atmo_shader = rl.loadShaderFromMemory(null, atmo_shader_src) catch @panic("Failed to load atmosphere shader");
-    defer rl.unloadShader(atmo_shader);
+    const atmo2d_shader = rl.loadShaderFromMemory(null, atmo2d_shader_src) catch @panic("Failed to load atmosphere 2D shader");
+    defer rl.unloadShader(atmo2d_shader);
+    const atmo3d_shader = rl.loadShaderFromMemory(null, atmo3d_shader_src) catch @panic("Failed to load atmosphere 3D shader");
+    defer rl.unloadShader(atmo3d_shader);
 
     rl.setTargetFPS(60);
     rg.loadStyleDefault();
@@ -35,7 +38,7 @@ pub fn main(init: std.process.Init) anyerror!void {
     rg.setStyle(.default, .{ .default = .text_size }, 24);
     defer rg.setStyle(.default, .{ .default = .text_size }, original_size);
 
-    var s = state.AppState.init(font, atmo_shader);
+    var s = state.AppState.init(font, atmo2d_shader, atmo3d_shader);
 
     while (!rl.windowShouldClose()) {
         // Update active view
