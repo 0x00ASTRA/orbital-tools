@@ -61,6 +61,10 @@ pub const AppState = struct {
     cam_distance: f32,
     is_dragging: bool,
     drag_last: rl.Vector2,
+    is_panning: bool,
+    pan_last: rl.Vector2,
+    cam_pos_x: f32,
+    cam_pos_y: f32,
 
     pub fn init(font: rl.Font, atmo_shader: rl.Shader) AppState {
         var state = AppState{
@@ -112,6 +116,10 @@ pub const AppState = struct {
             .cam_distance = 50.0,
             .is_dragging = false,
             .drag_last = .{ .x = 0, .y = 0 },
+            .is_panning = false,
+            .pan_last = .{ .x = 0, .y = 0 },
+            .cam_pos_x = 0,
+            .cam_pos_y = 0,
         };
 
         _ = std.fmt.bufPrintSentinel(&state.vbf_txt, "{d:.1}", .{state.targ_alt}, 0) catch {};
@@ -141,21 +149,40 @@ pub const AppState = struct {
 
     pub fn updateCamera(self: *AppState) void {
         const mouse = rl.getMousePosition();
-        const mouse_btn = rl.isMouseButtonDown(.left);
+        const left_mouse_btn = rl.isMouseButtonDown(.left);
+        const right_mouse_btn = rl.isMouseButtonDown(.right);
 
-        if (mouse_btn) {
+        if (left_mouse_btn) {
             if (!self.is_dragging) {
                 self.is_dragging = true;
                 self.drag_last = mouse;
             } else {
-                const dx = (mouse.x - self.drag_last.x) * 0.005;
-                const dy = (mouse.y - self.drag_last.y) * 0.005;
+                const gain: f32 = 0.005;
+                const dx = (mouse.x - self.drag_last.x) * gain;
+                const dy = (mouse.y - self.drag_last.y) * gain;
                 self.cam_yaw += dx;
-                self.cam_pitch = std.math.clamp(self.cam_pitch - dy, -1.4, 1.4);
+                const max_pitch = std.math.pi / 2.0 - 0.01; // sub 0.01 prevents gimbal lock / view flip
+                self.cam_pitch = std.math.clamp(self.cam_pitch - dy, -max_pitch, max_pitch);
                 self.drag_last = mouse;
             }
         } else {
             self.is_dragging = false;
+        }
+
+        if (right_mouse_btn) {
+            if (!self.is_panning) {
+                self.is_panning = true;
+                self.pan_last = mouse;
+            } else {
+                const gain: f32 = 0.0005;
+                const dx = (mouse.x - self.pan_last.x) * gain;
+                const dy = (mouse.y - self.pan_last.y) * gain;
+                self.cam_pos_x -= dx * self.cam_distance;
+                self.cam_pos_y += dy * self.cam_distance;
+                self.pan_last = mouse;
+            }
+        } else {
+            self.is_panning = false;
         }
 
         const mwm = rl.getMouseWheelMove();
@@ -165,9 +192,15 @@ pub const AppState = struct {
             self.cam_distance = @max(5.0, @min(5000.0, self.cam_distance));
         }
 
+        self.camera.target = .{
+            .x = self.cam_pos_x,
+            .y = self.cam_pos_y,
+            .z = 0,
+        };
+
         self.camera.position = .{
-            .x = self.cam_distance * @cos(self.cam_pitch) * @sin(self.cam_yaw),
-            .y = self.cam_distance * @sin(self.cam_pitch),
+            .x = self.cam_distance * @cos(self.cam_pitch) * @sin(self.cam_yaw) + self.cam_pos_x,
+            .y = self.cam_distance * @sin(self.cam_pitch) + self.cam_pos_y,
             .z = self.cam_distance * @cos(self.cam_pitch) * @cos(self.cam_yaw),
         };
     }
