@@ -2,8 +2,11 @@
 
 A resonant orbit planner for **Kerbal Space Program** and **real solar system** bodies, built with [Zig](https://ziglang.org/) and [raylib](https://www.raylib.com/).
 
-![App Screenshot](assets/images/app-screenshot.png)
+![2D Planner Screenshot](assets/images/2d_planner.png)
 
+![3D Planner Screenshot](assets/images/3d_planner.png)
+
+> NEW 3D Mode!
 ---
 
 ## What it does
@@ -28,6 +31,7 @@ Orbits are rendered visually with atmosphere, SOI boundary, and color-coded vali
 - Support for all KSP bodies (Kerbol system) and real solar system bodies (Sol system)
 - Scrollable zoom on the orbit view
 - Configurable resolution, font size, and font spacing
+- 2D and 3D planner modes
 
 ---
 
@@ -45,10 +49,10 @@ Orbits are rendered visually with atmosphere, SOI boundary, and color-coded vali
 - [Zig](https://ziglang.org/download/) 0.16.0
 
 ```bash
-git clone https://github.com/yourusername/OrbitalTools
-cd OrbitalTools
+git clone https://github.com/0x00ASTRA/orbital-tools
+cd orbital-tools
 zig build -Doptimize=ReleaseFast
-./zig-out/bin/OrbitalTools
+zig build run
 ```
 
 Linux also requires X11/Wayland dev headers for raylib:
@@ -62,7 +66,7 @@ sudo apt install libgl1-mesa-dev libx11-dev libxrandr-dev libxinerama-dev \
 
 ## Downloads
 
-Pre-built binaries are attached to each [release](https://github.com/0x00ASTRA/OrbitalTools/releases):
+Pre-built binaries are attached to each [release](https://github.com/0x00ASTRA/orbital-tools/releases):
 
 | Platform | File |
 |----------|------|
@@ -80,7 +84,15 @@ Pre-built binaries are attached to each [release](https://github.com/0x00ASTRA/O
 4. Toggle **Dive Orbit** to switch between raise and dive mode
 5. Read off the **apoapsis**, **periapsis**, **orbital periods**, and **burn delta-v** at the bottom
 
+**2D Mode**:
+
 Scroll to zoom in/out on the orbit view.
+
+**3D Mode**:
+
+Scroll to zoom.
+Left Mouse Button and drag to rotate.
+Right Mouse Button and drag to pan.
 
 ---
 
