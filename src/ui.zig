@@ -124,7 +124,14 @@ pub fn drawRightPanel(s: *state.AppState, rp_x: f32, rp_y: f32, row: f32) !void 
     if (rg.checkBox(.init(rp_x, rp_y + row * 4, 24, 24), "Dive Orbit", &s.dive_orbit)) {}
 
     if (s.view_mode == .planner_3d) {
-        if (rg.checkBox(.init(rp_x, rp_y + row * 5, 24, 24), "Show Lines", &s.show_lines)) {}
+        if (rg.checkBox(.init(rp_x, rp_y + row * 6, 24, 24), "Show Lines", &s.show_lines)) {}
+        if (rg.valueBoxFloat(.init(rp_x, rp_y + row * 5, 80, 32), "Inclination", &s.incl_txt, &s.incl, s.edit_incl) == 1 and !s.ps_edit_mode) {
+            s.edit_incl = !s.edit_incl;
+            if (s.incl < -359.99 or s.incl > 359.99) {
+                s.incl = 0;
+                _ = std.fmt.bufPrintSentinel(&s.incl_txt, "{d:.0}", .{s.incl}, 0) catch "";
+            }
+        }
     }
 
     // Keep this as last element to avoid draw overlap

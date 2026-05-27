@@ -44,6 +44,8 @@ pub const AppState = struct {
 
     // Orbit inputs
     targ_alt: f32,
+    incl: f32,
+    incl_txt: [6:0]u8,
     vbf_txt: [256:0]u8,
     edit_mode: bool,
     t_antecedent: f32,
@@ -52,6 +54,7 @@ pub const AppState = struct {
     consequent_txt: [3:0]u8,
     edit_antecedent: bool,
     edit_consequent: bool,
+    edit_incl: bool,
     dive_orbit: bool,
 
     // Zoom (2D)
@@ -100,6 +103,8 @@ pub const AppState = struct {
             .ps_edit_mode = false,
 
             .targ_alt = 95_000.0,
+            .incl = 0.0,
+            .incl_txt = std.mem.zeroes([6:0]u8),
             .vbf_txt = std.mem.zeroes([256:0]u8),
             .edit_mode = false,
             .t_antecedent = 3.0,
@@ -108,6 +113,7 @@ pub const AppState = struct {
             .consequent_txt = std.mem.zeroes([3:0]u8),
             .edit_antecedent = false,
             .edit_consequent = false,
+            .edit_incl = false,
             .dive_orbit = false,
 
             .scale_factor = 10.0,
@@ -136,6 +142,7 @@ pub const AppState = struct {
         _ = std.fmt.bufPrintSentinel(&state.consequent_txt, "{d:.0}", .{state.t_consequent}, 0) catch {};
         _ = std.fmt.bufPrintSentinel(&state.font_size_txt, "{d:.0}", .{state.font_size}, 0) catch {};
         _ = std.fmt.bufPrintSentinel(&state.font_spacing_txt, "{d:.0}", .{state.font_spacing}, 0) catch {};
+        _ = std.fmt.bufPrintSentinel(&state.incl_txt, "{d:.0}", .{state.incl}, 0) catch {};
 
         return state;
     }

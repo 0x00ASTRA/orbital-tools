@@ -77,13 +77,13 @@ pub fn drawView(s: *state.AppState) !void {
     if (s.show_lines) rl.drawSphereWires(planet_pos, planet_r + 0.1, 32, 32, .black);
 
     const targ_r = @as(f64, @floatCast(planet_r)) + @as(f64, s.targ_alt) * @as(f64, scale);
-    draw.drawOrbit3D(targ_r, 0.0, 0.0, 0.0, 0.0, 1.0, targ_color, 128);
+    draw.drawOrbit3D(targ_r, 0.0, s.incl, 0.0, 0.0, 1.0, targ_color, 128);
 
     rl.drawLine3D(.{ .x = 0.0, .y = planet_r, .z = 0.0 }, .{ .x = 0.0, .y = planet_r + 5.0, .z = 0.0 }, .red);
     rl.drawLine3D(.{ .x = 0.0, .y = -planet_r, .z = 0.0 }, .{ .x = 0.0, .y = -planet_r - 5.0, .z = 0.0 }, .blue);
 
     // Resonant orbit
-    const incl = res_orbit.inclination;
+    const incl = s.incl;
     const lan = res_orbit.lan orelse 0.0;
     const aop = res_orbit.arg_of_periapsis orelse 0.0;
     draw.drawOrbit3D(
