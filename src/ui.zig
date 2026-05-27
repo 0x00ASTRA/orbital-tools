@@ -123,15 +123,15 @@ pub fn drawRightPanel(s: *state.AppState, rp_x: f32, rp_y: f32, row: f32) !void 
 
     if (rg.checkBox(.init(rp_x, rp_y + row * 4, 24, 24), "Dive Orbit", &s.dive_orbit)) {}
 
+    if (s.view_mode == .planner_3d) {
+        if (rg.checkBox(.init(rp_x, rp_y + row * 5, 24, 24), "Show Lines", &s.show_lines)) {}
+    }
+
+    // Keep this as last element to avoid draw overlap
     if (rg.dropdownBox(.init(rp_x, rp_y, 150, 32), bs, &s.selected_body, s.ps_edit_mode) == 1) {
         s.body = try bodyIdToBody(s.selected_system, s.selected_body);
         s.ps_edit_mode = !s.ps_edit_mode;
     }
-
-    if (s.view_mode == .planner_3d) {
-        if (rg.checkBox(.init(rp_x, rp_y + row * 5, 24, 24), "Show Lines", &s.show_lines)) {}
-    }
-    std.debug.print("ViewMode: {s}\n", .{@tagName(s.view_mode)});
 }
 
 pub fn drawBottomBar(
