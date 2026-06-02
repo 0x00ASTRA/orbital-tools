@@ -3,8 +3,8 @@ const std = @import("std");
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-    const wayland: bool = b.option(bool, "Wayland", "Use Wayland Linux Display Backend") orelse true;
-    const x11: bool = b.option(bool, "X11", "Use X11 Linux Display Backend") orelse !wayland;
+    const wayland: bool = b.option(bool, "wayland", "Use Wayland Linux Display Backend") orelse true;
+    const x11: bool = b.option(bool, "x11", "Use X11 Linux Display Backend") orelse !wayland;
 
     const orbits_mod = b.addModule("orbits", .{
         .target = target,
