@@ -30,8 +30,21 @@ pub fn build(b: *std.Build) void {
     const raygui = raylib_dep.module("raygui"); // raygui module
     const raylib_artifact = raylib_dep.artifact("raylib"); // raylib C library
 
+    const exe_name: []const u8 = blk: {
+        const os_tag = target.result.os.tag;
+
+        break :blk switch (os_tag) {
+            .linux => if (wayland and !x11)
+                "OrbitalTools-Wayland"
+            else
+                "OrbitalTools-X11",
+
+            else => "OrbitalTools",
+        };
+    };
+
     const exe = b.addExecutable(.{
-        .name = "OrbitalTools",
+        .name = exe_name,
         .version = .{ .major = 0, .minor = 3, .patch = 0, .build = "release" },
         .root_module = b.addModule("root_mod", .{
             .target = target,
