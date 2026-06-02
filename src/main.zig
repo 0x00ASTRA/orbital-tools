@@ -16,10 +16,23 @@ pub fn main(init: std.process.Init) anyerror!void {
     const io = init.io;
     _ = io;
 
-    const screen_width: i32 = 1920;
-    const screen_height: i32 = 1080;
+    var screen_width: i32 = 1920;
+    var screen_height: i32 = 1080;
 
-    rl.setConfigFlags(.{ .msaa_4x_hint = true });
+    const _sw: struct { w: i32, h: i32 } = blk: {
+        rl.setConfigFlags(.{ .window_hidden = true });
+        rl.initWindow(0, 0, "");
+        const monitor = rl.getCurrentMonitor();
+        const width = rl.getMonitorWidth(monitor);
+        const height = rl.getMonitorHeight(monitor);
+        rl.closeWindow();
+        break :blk .{ .w = width, .h = height };
+    };
+
+    screen_height = _sw.h;
+    screen_width = _sw.w;
+
+    rl.setConfigFlags(.{ .msaa_4x_hint = true, .borderless_windowed_mode = true, .fullscreen_mode = false });
     rl.initWindow(screen_width, screen_height, "Resonant Orbit Planner");
     defer rl.closeWindow();
 
@@ -41,7 +54,7 @@ pub fn main(init: std.process.Init) anyerror!void {
     rg.setStyle(.default, .{ .default = .text_size }, 24);
     defer rg.setStyle(.default, .{ .default = .text_size }, original_size);
 
-    var s = state.AppState.init(font, atmo2d_shader, atmo3d_shader, backdrop_shader);
+    var s = state.AppState.init(font, atmo2d_shader, atmo3d_shader, backdrop_shader, screen_width, screen_height);
 
     while (!rl.windowShouldClose()) {
         // Update active view

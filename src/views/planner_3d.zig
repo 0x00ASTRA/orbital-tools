@@ -33,17 +33,8 @@ pub fn drawView(s: *state.AppState) !void {
     const t_orbit = s.targetOrbit();
     const res_orbit = s.resonantOrbit();
 
-    const targ_color: rl.Color = if ((planet_r + (@as(f32, @floatCast(s.pe * scale))) <= atmo_r) or (blk: {
-        if (s.soi_radius) |soi| break :blk @as(f32, @floatCast(s.ap * scale)) > soi;
-        break :blk false;
-    })) .red else .green;
-    const res_color: rl.Color = if ((targ_color.toInt() == rl.Color.red.toInt()) or (blk: {
-        if (s.soi_radius) |soi| {
-            break :blk (@as(f32, @floatCast(res_orbit.apoapsis() * scale)) > soi) or
-                (planet_r + @as(f32, @floatCast(scale * res_orbit.periapsis())) < atmo_r);
-        }
-        break :blk false;
-    })) .red else .orange;
+    const targ_color: rl.Color = if (t_orbit.isValid()) .green else .red;
+    const res_color: rl.Color = if (res_orbit.isValid()) .orange else .red;
 
     // ── Background Starfield ──────────────────────────────────────────────
     const cam_forward = rl.Vector3.normalize(rl.Vector3.subtract(s.camera.target, s.camera.position));
@@ -79,7 +70,7 @@ pub fn drawView(s: *state.AppState) !void {
     // Resonant orbit
     const incl = s.incl;
     const lan = res_orbit.lan orelse 0.0;
-    const aop = res_orbit.arg_of_periapsis orelse 0.0;
+    const aop = res_orbit.arg_of_periapsis;
     draw.drawOrbit3D(
         res_orbit.semi_major_axis * @as(f64, scale),
         res_orbit.eccentricity,

@@ -3,6 +3,8 @@ const std = @import("std");
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
+    const wayland: bool = b.option(bool, "Wayland", "Use Wayland Linux Display Backend") orelse true;
+    const x11: bool = b.option(bool, "X11", "Use X11 Linux Display Backend") orelse !wayland;
 
     const orbits_mod = b.addModule("orbits", .{
         .target = target,
@@ -10,11 +12,17 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/root.zig"),
     });
 
-    const raylib_dep = b.dependency("raylib_zig", .{
+    const raylib_dep = if (wayland and !x11) b.dependency("raylib_zig", .{
         .target = target,
         .optimize = optimize,
         .linkage = .static,
-        .linux_display_backend = .Both,
+        .linux_display_backend = .Wayland,
+        .platform = .glfw,
+    }) else b.dependency("raylib_zig", .{
+        .target = target,
+        .optimize = optimize,
+        .linkage = .static,
+        .linux_display_backend = .X11,
         .platform = .glfw,
     });
 

@@ -91,8 +91,37 @@ pub fn drawSettings(s: *state.AppState) void {
     }
 }
 
+const Iter = struct {
+    val: usize,
+    start_val: usize,
+
+    pub fn init(start_val: usize) Iter {
+        return .{
+            .val = 0,
+            .start_val = start_val,
+        };
+    }
+
+    pub fn next(self: *Iter, T: type) T {
+        const init_val: usize = self.val;
+        const new_val: usize = init_val + 1;
+        self.val = new_val;
+        errdefer self.val = init_val;
+        return switch (@typeInfo(T)) {
+            .int => @as(T, @intCast(new_val)),
+            .float => @as(T, @floatFromInt(new_val)),
+            else => @compileError("Invalid Type Conversion"),
+        };
+    }
+
+    pub fn reset(self: *Iter) void {
+        self.val = self.start_val;
+    }
+};
+
 pub fn drawRightPanel(s: *state.AppState, rp_x: f32, rp_y: f32, row: f32) !void {
     const bs = bodiesStr(s.selected_system);
+    var row_num: Iter = .init(0);
 
     _ = rg.comboBox(.init(rp_x + 160, rp_y, 120, 32), systems_str, &s.selected_system);
     if (s.selected_system != s.last_selected_system) {
@@ -101,44 +130,139 @@ pub fn drawRightPanel(s: *state.AppState, rp_x: f32, rp_y: f32, row: f32) !void 
         s.body = try bodyIdToBody(s.selected_system, s.selected_body);
     }
 
-    if (rg.valueBoxFloat(.init(rp_x, rp_y + row, 200, 32), "Target Ap (m): ", &s.ap_txt, &s.ap, s.edit_ap) == 1 and !s.ps_edit_mode) {
+    if (rg.valueBoxFloat(
+        .init(rp_x, rp_y + row * row_num.next(f32), 200, 32),
+        "Target Ap (m): ",
+        &s.ap_txt,
+        &s.ap,
+        s.edit_ap,
+    ) == 1 and !s.ps_edit_mode) {
         s.edit_ap = !s.edit_ap;
+        if (s.edit_ap) std.debug.print("\x1b[33mtrue\x1b[0m\n", .{});
+        if (s.ap < s.pe) {
+            s.pe = s.ap;
+            _ = std.fmt.bufPrintSentinel(
+                &s.pe_txt,
+                "{d:.0}",
+                .{s.pe},
+                0,
+            ) catch "";
+        }
     }
-    if (rg.valueBoxFloat(.init(rp_x, rp_y + row * 2, 200, 32), "Target Pe (m): ", &s.pe_txt, &s.pe, s.edit_pe) == 1 and !s.ps_edit_mode) {
+    if (rg.valueBoxFloat(
+        .init(rp_x, rp_y + row * row_num.next(f32), 200, 32),
+        "Target Pe (m): ",
+        &s.pe_txt,
+        &s.pe,
+        s.edit_pe,
+    ) == 1 and !s.ps_edit_mode) {
         s.edit_pe = !s.edit_pe;
+        if (s.pe > s.ap) {
+            s.pe = s.ap;
+            _ = std.fmt.bufPrintSentinel(
+                &s.pe_txt,
+                "{d:.0}",
+                .{s.pe},
+                0,
+            ) catch "";
+        }
     }
 
-    if (rg.valueBoxFloat(.init(rp_x, rp_y + row * 3, 80, 32), "Antecedent: ", &s.antecedent_txt, &s.t_antecedent, s.edit_antecedent) == 1 and !s.ps_edit_mode) {
+    if (rg.valueBoxFloat(
+        .init(rp_x, rp_y + row * row_num.next(f32), 80, 32),
+        "Antecedent: ",
+        &s.antecedent_txt,
+        &s.t_antecedent,
+        s.edit_antecedent,
+    ) == 1 and !s.ps_edit_mode) {
         s.edit_antecedent = !s.edit_antecedent;
     }
 
-    if (rg.valueBoxFloat(.init(rp_x, rp_y + row * 4, 80, 32), "Consequent: ", &s.consequent_txt, &s.t_consequent, s.edit_consequent) == 1 and !s.ps_edit_mode) {
+    if (rg.valueBoxFloat(
+        .init(rp_x, rp_y + row * row_num.next(f32), 80, 32),
+        "Consequent: ",
+        &s.consequent_txt,
+        &s.t_consequent,
+        s.edit_consequent,
+    ) == 1 and !s.ps_edit_mode) {
         s.edit_consequent = !s.edit_consequent;
         if (s.t_consequent >= s.t_antecedent) {
             s.t_consequent = s.t_antecedent - 1;
-            _ = std.fmt.bufPrintSentinel(&s.consequent_txt, "{d:.0}", .{s.t_consequent}, 0) catch "";
+            _ = std.fmt.bufPrintSentinel(
+                &s.consequent_txt,
+                "{d:.0}",
+                .{s.t_consequent},
+                0,
+            ) catch "";
         }
         if (s.t_consequent < 1) {
             s.t_consequent = 1;
-            _ = std.fmt.bufPrintSentinel(&s.consequent_txt, "{d:.0}", .{s.t_consequent}, 0) catch "";
+            _ = std.fmt.bufPrintSentinel(
+                &s.consequent_txt,
+                "{d:.0}",
+                .{s.t_consequent},
+                0,
+            ) catch "";
         }
     }
 
-    if (rg.checkBox(.init(rp_x, rp_y + row * 5, 24, 24), "Dive Orbit", &s.dive_orbit)) {}
+    if (rg.checkBox(
+        .init(rp_x, rp_y + row * row_num.next(f32), 24, 24),
+        "Dive Orbit",
+        &s.dive_orbit,
+    )) {}
 
     if (s.view_mode == .planner_3d) {
-        if (rg.checkBox(.init(rp_x, rp_y + row * 7, 24, 24), "Show Lines", &s.show_lines)) {}
-        if (rg.valueBoxFloat(.init(rp_x, rp_y + row * 6, 80, 32), "Inclination", &s.incl_txt, &s.incl, s.edit_incl) == 1 and !s.ps_edit_mode) {
+        if (rg.valueBoxFloat(
+            .init(rp_x, rp_y + row * row_num.next(f32), 80, 32),
+            "Inclination",
+            &s.incl_txt,
+            &s.incl,
+            s.edit_incl,
+        ) == 1 and !s.ps_edit_mode) {
             s.edit_incl = !s.edit_incl;
             if (s.incl < -359.99 or s.incl > 359.99) {
                 s.incl = 0;
-                _ = std.fmt.bufPrintSentinel(&s.incl_txt, "{d:.0}", .{s.incl}, 0) catch "";
+                _ = std.fmt.bufPrintSentinel(
+                    &s.incl_txt,
+                    "{d:.0}",
+                    .{s.incl},
+                    0,
+                ) catch "";
             }
         }
+        if (rg.valueBoxFloat(
+            .init(rp_x, rp_y + row * row_num.next(f32), 80, 32),
+            "Arg. of Peri",
+            &s.arg_pe_txt,
+            &s.arg_pe,
+            s.edit_arg_pe,
+        ) == 1 and !s.ps_edit_mode) {
+            s.edit_arg_pe = !s.edit_arg_pe;
+            if (s.arg_pe < 0 or s.arg_pe > 359.999) {
+                s.arg_pe = 0;
+                _ = std.fmt.bufPrintSentinel(
+                    &s.arg_pe_txt,
+                    "{d:.0}",
+                    .{s.arg_pe},
+                    0,
+                ) catch 0;
+            }
+        }
+        if (rg.checkBox(
+            .init(rp_x, rp_y + row * row_num.next(f32), 24, 24),
+            "Show Lines",
+            &s.show_lines,
+        )) {}
     }
 
     // Keep this as last element to avoid draw overlap
-    if (rg.dropdownBox(.init(rp_x, rp_y, 150, 32), bs, &s.selected_body, s.ps_edit_mode) == 1) {
+    if (rg.dropdownBox(
+        .init(rp_x, rp_y, 150, 32),
+        bs,
+        &s.selected_body,
+        s.ps_edit_mode,
+    ) == 1) {
         s.body = try bodyIdToBody(s.selected_system, s.selected_body);
         s.ps_edit_mode = !s.ps_edit_mode;
     }
@@ -162,24 +286,85 @@ pub fn drawBottomBar(
     var p_buf: [128:0]u8 = undefined;
 
     const apo_str = formatWithCommas(&apo_str_buf, res_orbit.apoapsis()) catch "N/A";
-    const apo_txt = std.fmt.bufPrintSentinel(&txt_buf, "Ap: {s} m", .{apo_str}, 0) catch "N/A";
-    rl.drawTextEx(s.font, apo_txt, .init(@floatFromInt(col), @floatFromInt(bot_y)), s.font_size, s.font_spacing, .ray_white);
+    const apo_txt = std.fmt.bufPrintSentinel(
+        &txt_buf,
+        "Ap: {s} m",
+        .{apo_str},
+        0,
+    ) catch "N/A";
+    rl.drawTextEx(
+        s.font,
+        apo_txt,
+        .init(@floatFromInt(col), @floatFromInt(bot_y)),
+        s.font_size,
+        s.font_spacing,
+        .ray_white,
+    );
 
     const peri_str = formatWithCommas(&apo_str_buf, res_orbit.periapsis()) catch "N/A";
-    const peri_txt = std.fmt.bufPrintSentinel(&txt_buf, "Pe: {s} m", .{peri_str}, 0) catch "N/A";
-    rl.drawTextEx(s.font, peri_txt, .init(@floatFromInt(col2), @floatFromInt(bot_y)), s.font_size, s.font_spacing, .ray_white);
+    @memset(&txt_buf, undefined);
+    const peri_txt = std.fmt.bufPrintSentinel(
+        &txt_buf,
+        "Pe: {s} m",
+        .{peri_str},
+        0,
+    ) catch "N/A";
+    rl.drawTextEx(
+        s.font,
+        peri_txt,
+        .init(@floatFromInt(col2), @floatFromInt(bot_y)),
+        s.font_size,
+        s.font_spacing,
+        .ray_white,
+    );
 
     const transfer_dv = t_orbit.transferDv(res_orbit, s.dive_orbit);
-    const dv_txt = std.fmt.bufPrintSentinel(&p_buf, "Burn DeltaV: {d:.1} m/s", .{transfer_dv}, 0) catch "N/A";
-    rl.drawTextEx(s.font, dv_txt, .init(@floatFromInt(col3), @floatFromInt(bot_y)), s.font_size, s.font_spacing, .magenta);
+    const dv_txt = std.fmt.bufPrintSentinel(
+        &p_buf,
+        "Burn DeltaV: {d:.1} m/s",
+        .{transfer_dv},
+        0,
+    ) catch "N/A";
+    rl.drawTextEx(
+        s.font,
+        dv_txt,
+        .init(@floatFromInt(col3), @floatFromInt(bot_y)),
+        s.font_size,
+        s.font_spacing,
+        .magenta,
+    );
 
     const res_hms = periodToHMS(res_orbit.period());
-    const res_p_txt = std.fmt.bufPrintSentinel(&p_buf, "Resonant: {d}h {d}m {d}s", .{ res_hms.hours, res_hms.minutes, res_hms.seconds }, 0) catch "N/A";
-    rl.drawTextEx(s.font, res_p_txt, .init(@floatFromInt(col), @floatFromInt(bot_y + 50)), s.font_size, s.font_spacing, res_color);
+    const res_p_txt = std.fmt.bufPrintSentinel(
+        &p_buf,
+        "Resonant: {d}h {d}m {d}s",
+        .{ res_hms.hours, res_hms.minutes, res_hms.seconds },
+        0,
+    ) catch "N/A";
+    rl.drawTextEx(
+        s.font,
+        res_p_txt,
+        .init(@floatFromInt(col), @floatFromInt(bot_y + 50)),
+        s.font_size,
+        s.font_spacing,
+        res_color,
+    );
 
     const targ_hms = periodToHMS(t_orbit.period());
-    const targ_p_txt = std.fmt.bufPrintSentinel(&p_buf, "Target: {d}h {d}m {d}s", .{ targ_hms.hours, targ_hms.minutes, targ_hms.seconds }, 0) catch "N/A";
-    rl.drawTextEx(s.font, targ_p_txt, .init(@floatFromInt(col2), @floatFromInt(bot_y + 50)), s.font_size, s.font_spacing, targ_color);
+    const targ_p_txt = std.fmt.bufPrintSentinel(
+        &p_buf,
+        "Target: {d}h {d}m {d}s",
+        .{ targ_hms.hours, targ_hms.minutes, targ_hms.seconds },
+        0,
+    ) catch "N/A";
+    rl.drawTextEx(
+        s.font,
+        targ_p_txt,
+        .init(@floatFromInt(col2), @floatFromInt(bot_y + 50)),
+        s.font_size,
+        s.font_spacing,
+        targ_color,
+    );
 
     _ = obt;
 }

@@ -46,11 +46,14 @@ pub const AppState = struct {
     ap: f32,
     pe: f32,
     incl: f32,
+    arg_pe: f32,
     incl_txt: [6:0]u8,
     ap_txt: [256:0]u8,
     pe_txt: [256:0]u8,
+    arg_pe_txt: [6:0]u8,
     edit_ap: bool,
     edit_pe: bool,
+    edit_arg_pe: bool,
     t_antecedent: f32,
     t_consequent: f32,
     antecedent_txt: [3:0]u8,
@@ -76,15 +79,20 @@ pub const AppState = struct {
     cam_pos_x: f32,
     cam_pos_y: f32,
 
-    pub fn init(font: rl.Font, atmo2d_shader: rl.Shader, atmo3d_shader: rl.Shader, backdrop_shader: rl.Shader) AppState {
+    pub fn init(font: rl.Font, atmo2d_shader: rl.Shader, atmo3d_shader: rl.Shader, backdrop_shader: rl.Shader, screen_width: i32, screen_height: i32) AppState {
         const img = rl.genImageColor(256, 256, .white);
         var state = AppState{
+            .screen_width = screen_width,
+            .screen_height = screen_height,
+            .scr_w = screen_width,
+            .scr_h = screen_height,
+
             .width_edit = false,
             .height_edit = false,
             .show_settings = false,
 
             .view_mode = .planner_2d,
-            .show_lines = true,
+            .show_lines = false,
 
             .font = font,
             .font_size = 28.0,
@@ -108,11 +116,14 @@ pub const AppState = struct {
             .ap = 95_000.0,
             .pe = 95_000.0,
             .incl = 0.0,
+            .arg_pe = 0.0,
             .incl_txt = std.mem.zeroes([6:0]u8),
             .ap_txt = std.mem.zeroes([256:0]u8),
             .pe_txt = std.mem.zeroes([256:0]u8),
+            .arg_pe_txt = std.mem.zeroes([6:0]u8),
             .edit_ap = false,
             .edit_pe = false,
+            .edit_arg_pe = false,
             .t_antecedent = 3.0,
             .t_consequent = 2.0,
             .antecedent_txt = std.mem.zeroes([3:0]u8),
@@ -149,7 +160,8 @@ pub const AppState = struct {
         _ = std.fmt.bufPrintSentinel(&state.consequent_txt, "{d:.0}", .{state.t_consequent}, 0) catch {};
         _ = std.fmt.bufPrintSentinel(&state.font_size_txt, "{d:.0}", .{state.font_size}, 0) catch {};
         _ = std.fmt.bufPrintSentinel(&state.font_spacing_txt, "{d:.0}", .{state.font_spacing}, 0) catch {};
-        _ = std.fmt.bufPrintSentinel(&state.incl_txt, "{d:.0}", .{state.incl}, 0) catch {};
+        _ = std.fmt.bufPrintSentinel(&state.incl_txt, "{d:.2}", .{state.incl}, 0) catch {};
+        _ = std.fmt.bufPrintSentinel(&state.arg_pe_txt, "{d:.2}", .{state.arg_pe}, 0) catch {};
 
         return state;
     }
@@ -159,7 +171,8 @@ pub const AppState = struct {
             self.body,
             @as(f64, @floatCast(self.ap)),
             @as(f64, @floatCast(self.pe)),
-            0,
+            self.incl,
+            self.arg_pe,
         );
     }
 

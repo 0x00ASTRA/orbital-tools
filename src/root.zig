@@ -43,12 +43,12 @@ pub const OrbitalParams = struct {
     inclination: f64,
     semi_major_axis: f64,
     eccentricity: f64,
+    arg_of_periapsis: f64,
     lan: ?f64 = null,
-    arg_of_periapsis: ?f64 = null,
     true_anomaly: ?f64 = null,
     frame: ?ReferenceFrame = null,
 
-    pub fn initSimple(body: CelestialBody, apo: f64, peri: f64, incl: f64) OrbitalParams {
+    pub fn initSimple(body: CelestialBody, apo: f64, peri: f64, incl: f64, arg_pe: f64) OrbitalParams {
         const radius = body.radius();
         const apo_r = radius + apo;
         const peri_r = radius + peri;
@@ -59,6 +59,7 @@ pub const OrbitalParams = struct {
             .inclination = incl,
             .semi_major_axis = sma,
             .eccentricity = ecc,
+            .arg_of_periapsis = std.math.degreesToRadians(arg_pe),
         };
     }
 
@@ -131,6 +132,26 @@ pub const OrbitalParams = struct {
 
     pub fn periodF32(self: OrbitalParams) f32 {
         return @floatCast(self.period());
+    }
+
+    pub fn isValid(self: OrbitalParams) bool {
+        const atmo_r = self.body.params().atmosphere_height;
+        const soi_r = self.body.soi();
+        const pe = self.periapsis();
+        const ap = self.apoapsis();
+        const past_atmo: bool = blk: {
+            if (atmo_r) |atm| {
+                break :blk pe > atm;
+            } else break :blk true;
+        };
+        const in_soi: bool = blk: {
+            if (soi_r) |soi| {
+                break :blk ap < soi;
+            } else break :blk true;
+        };
+        const past_ground: bool = pe > 0;
+
+        return (past_ground and past_atmo and in_soi);
     }
 };
 

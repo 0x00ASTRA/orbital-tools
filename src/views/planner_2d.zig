@@ -31,8 +31,8 @@ pub fn drawView(s: *state.AppState) !void {
 
     const screen_half: i32 = @divTrunc(s.screen_width, 2);
     const body_center = Vec2(i32){
-        .x = @divExact(screen_half, 2),
-        .y = @divExact(s.screen_height, 2),
+        .x = @divTrunc(screen_half, 2),
+        .y = @divTrunc(s.screen_height, 2),
     };
     const body_center_rl = rl.Vector2{
         .x = @floatFromInt(body_center.x),
@@ -110,10 +110,7 @@ pub fn drawView(s: *state.AppState) !void {
     }
 
     // ── Target Orbit ──────────────────────────────────────────────────────
-    const targ_color: rl.Color = if ((radius + (@as(f32, @floatCast(s.pe * scale))) <= atmo_radius) or (blk: {
-        if (s.soi_radius) |soi| break :blk @as(f32, @floatCast(s.ap * scale)) > soi;
-        break :blk false;
-    })) .red else .green;
+    const targ_color: rl.Color = if (t_orbit.isValid()) .green else .red;
 
     const t_offset = t_orbit.semi_major_axis * t_orbit.eccentricity;
     const t_y: f32 = @floatCast(t_offset * scale);
@@ -129,13 +126,7 @@ pub fn drawView(s: *state.AppState) !void {
     const res_semi_min: f32 = @floatCast(res_orbit.semi_major_axis * std.math.sqrt(1.0 - res_orbit.eccentricity * res_orbit.eccentricity) * scale);
     segments = draw.calculateSegments(@as(f32, @floatCast(res_orbit.semi_major_axis * scale)));
 
-    const res_color: rl.Color = if ((targ_color.toInt() == rl.Color.red.toInt()) or (blk: {
-        if (s.soi_radius) |soi| {
-            break :blk (@as(f32, @floatCast(res_orbit.apoapsis() * scale)) > soi) or
-                (radius + @as(f32, @floatCast(scale * res_orbit.periapsis())) < atmo_radius);
-        }
-        break :blk false;
-    })) .red else .orange;
+    const res_color: rl.Color = if (res_orbit.isValid()) .orange else .red;
 
     draw.drawEllipseLines(res_center, res_semi_min, @as(f32, @floatCast(res_orbit.semi_major_axis * scale)), segments, res_color);
 
