@@ -9,7 +9,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact_name: OrbitalTools
+            artifact_name: OrbitalTools-Wayland
             asset_name: OrbitalTools-linux-x86_64-Wayland
             build_cmd: >-
               PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig
@@ -32,7 +32,7 @@ jobs:
               sudo ln -sf /usr/lib/x86_64-linux-gnu/libxkbcommon.so /usr/lib/libxkbcommon.so
 
           - os: ubuntu-latest
-            artifact_name: OrbitalTools
+            artifact_name: OrbitalTools-X11
             asset_name: OrbitalTools-linux-x86_64-X11
             build_cmd: >-
               PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig
