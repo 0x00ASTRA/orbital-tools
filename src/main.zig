@@ -78,42 +78,9 @@ pub fn main(init: std.process.Init) anyerror!void {
         }
 
         // ── Tab bar (always on top) ───────────────────────────────────────
-        drawTabBar(&s);
+        ui.drawTabBar(&s);
 
         // ── Settings (always on top) ──────────────────────────────────────
         ui.drawSettings(&s);
-    }
-}
-
-fn drawTabBar(s: *state.AppState) void {
-    const tab_w: f32 = 120;
-    const tab_h: f32 = 32;
-    const tab_y: f32 = 10;
-    const start_x: f32 = @as(f32, @floatFromInt(s.screen_width)) * 0.75;
-
-    const active_color = rl.Color{ .r = 80, .g = 80, .b = 80, .a = 255 };
-    const inactive_color = rl.Color{ .r = 30, .g = 30, .b = 30, .a = 255 };
-    const border_color = rl.Color{ .r = 120, .g = 120, .b = 120, .a = 255 };
-    const text_color = rl.Color{ .r = 220, .g = 220, .b = 220, .a = 255 };
-
-    const tabs = [_]struct { label: [:0]const u8, mode: state.ViewMode }{
-        .{ .label = "2D", .mode = .planner_2d },
-        .{ .label = "3D", .mode = .planner_3d },
-    };
-
-    for (tabs, 0..) |tab, i| {
-        const x = start_x + @as(f32, @floatFromInt(i)) * (tab_w + 4);
-        const rect = rl.Rectangle{ .x = x, .y = tab_y, .width = tab_w, .height = tab_h };
-        const is_active = s.view_mode == tab.mode;
-
-        rl.drawRectangleRec(rect, if (is_active) active_color else inactive_color);
-        rl.drawRectangleLinesEx(rect, 1, border_color);
-        rl.drawTextEx(s.font, tab.label, .{ .x = x + tab_w / 2 - 16, .y = tab_y + 6 }, 20, 1, text_color);
-
-        if (rl.checkCollisionPointRec(rl.getMousePosition(), rect) and
-            rl.isMouseButtonPressed(.left))
-        {
-            s.view_mode = tab.mode;
-        }
     }
 }

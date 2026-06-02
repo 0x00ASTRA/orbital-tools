@@ -14,6 +14,7 @@ pub const AppState = struct {
     scr_w: i32,
     scr_h: i32,
     ui_scale: f32,
+    ui_scl: f32,
     ui_scale_txt: [6:0]u8,
     width_edit: bool,
     height_edit: bool,
@@ -91,6 +92,7 @@ pub const AppState = struct {
             .scr_w = screen_width,
             .scr_h = screen_height,
             .ui_scale = 1.0,
+            .ui_scl = 1.0,
             .ui_scale_txt = std.mem.zeroes([6:0]u8),
             .ui_scale_edit = false,
 
@@ -170,6 +172,7 @@ pub const AppState = struct {
         _ = std.fmt.bufPrintSentinel(&state.font_spacing_txt, "{d:.0}", .{state.font_spacing}, 0) catch {};
         _ = std.fmt.bufPrintSentinel(&state.incl_txt, "{d:.2}", .{state.incl}, 0) catch {};
         _ = std.fmt.bufPrintSentinel(&state.arg_pe_txt, "{d:.2}", .{state.arg_pe}, 0) catch {};
+        _ = std.fmt.bufPrintSentinel(&state.ui_scale_txt, "{d:.1}", .{state.ui_scale}, 0) catch {};
 
         return state;
     }

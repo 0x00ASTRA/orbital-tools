@@ -69,13 +69,16 @@ pub fn bodyIdToBody(system: i32, id: i32) !@import("orbits").CelestialBody {
 }
 
 pub fn drawSettings(s: *state.AppState) void {
-    const ui_scale = s.ui_scale;
+    const max_ui_scale: f32 = 10.0;
+    const min_ui_scale: f32 = 0.25;
+    const ui_scale = std.math.clamp(s.ui_scale, min_ui_scale, max_ui_scale);
     const check_box_w: f32 = 24 * ui_scale;
     const check_box_x: f32 = 10;
     const check_box_y: f32 = check_box_x;
-    const rect_h: f32 = s.font_size + 4;
+    const font_size: f32 = s.font_size * ui_scale;
+    const rect_h: f32 = font_size + 4;
     const rect_w: f32 = 100 * ui_scale;
-    const rect_x: f32 = 200;
+    const rect_x: f32 = 200 * ui_scale;
     const row_sep: f32 = 10 * ui_scale;
     var row_iter: Iter = .init(0);
     const row_y: f32 = rect_h + row_sep;
@@ -89,56 +92,64 @@ pub fn drawSettings(s: *state.AppState) void {
     if (rg.valueBox(.init(rect_x, row_y * row_iter.next(f32), rect_w, rect_h), "Height: ", &s.scr_h, 500, 65000, s.height_edit) == 1) {
         s.height_edit = !s.height_edit;
     }
-    if (rg.button(.init(rect_x, row_y * row_iter.next(f32), rect_w, rect_h), "Apply")) {
-        s.screen_width = std.math.clamp(s.scr_w, @as(i32, @trunc(rect_w)), 10_000);
-        s.screen_height = std.math.clamp(s.scr_h, @as(i32, @trunc(rect_w)), 10_000);
-        rl.setWindowSize(s.screen_width, s.screen_height);
-    }
+
     if (rg.valueBoxFloat(.init(rect_x, row_y * row_iter.next(f32), rect_w, rect_h), "Font Size: ", &s.font_size_txt, &s.font_size, s.font_size_edit) == 1) {
         s.font_size_edit = !s.font_size_edit;
-        rg.setStyle(.default, .{ .default = .text_size }, @as(i32, @trunc(s.font_size)));
     }
     if (rg.valueBoxFloat(.init(rect_x, row_y * row_iter.next(f32), rect_w, rect_h), "Font Spacing: ", &s.font_spacing_txt, &s.font_spacing, s.font_spacing_edit) == 1) {
         s.font_spacing_edit = !s.font_spacing_edit;
     }
-    if (rg.valueBoxFloat(.init(rect_x, row_y * row_iter.next(f32), rect_w, rect_h), "UI Scale: ", &s.ui_scale_txt, &s.ui_scale, s.ui_scale_edit) == 1) {
+    if (rg.valueBoxFloat(.init(rect_x, row_y * row_iter.next(f32), rect_w, rect_h), "UI Scale: ", &s.ui_scale_txt, &s.ui_scl, s.ui_scale_edit) == 1) {
         s.ui_scale_edit = !s.ui_scale_edit;
+    }
+    if (rg.button(.init(rect_x, row_y * row_iter.next(f32), rect_w, rect_h), "Apply")) {
+        s.screen_width = std.math.clamp(s.scr_w, @as(i32, @trunc(rect_w)), 10_000);
+        s.screen_height = std.math.clamp(s.scr_h, @as(i32, @trunc(rect_w)), 10_000);
+        s.ui_scale = std.math.clamp(s.ui_scl, min_ui_scale, max_ui_scale);
+        rl.setWindowSize(s.screen_width, s.screen_height);
+        rg.setStyle(.default, .{ .default = .text_size }, @as(i32, @trunc(s.font_size * s.ui_scale)));
     }
 }
 
-const Iter = struct {
-    val: usize,
-    start_val: usize,
+pub fn drawTabBar(s: *state.AppState) void {
+    const ui_scale = s.ui_scale;
+    const tab_w: f32 = 120 * ui_scale;
+    const tab_h: f32 = (s.font_size + 4) * ui_scale;
+    const tab_y: f32 = 10;
+    const start_x: f32 = @as(f32, @floatFromInt(s.screen_width)) * 0.75;
 
-    pub fn init(start_val: usize) Iter {
-        return .{
-            .val = 0,
-            .start_val = start_val,
-        };
-    }
+    const active_color = rl.Color{ .r = 80, .g = 80, .b = 80, .a = 255 };
+    const inactive_color = rl.Color{ .r = 30, .g = 30, .b = 30, .a = 255 };
+    const border_color = rl.Color{ .r = 120, .g = 120, .b = 120, .a = 255 };
+    const text_color = rl.Color{ .r = 220, .g = 220, .b = 220, .a = 255 };
 
-    pub fn next(self: *Iter, T: type) T {
-        const init_val: usize = self.val;
-        const new_val: usize = init_val + 1;
-        self.val = new_val;
-        errdefer self.val = init_val;
-        return switch (@typeInfo(T)) {
-            .int => @as(T, @intCast(new_val)),
-            .float => @as(T, @floatFromInt(new_val)),
-            else => @compileError("Invalid Type Conversion"),
-        };
-    }
+    const tabs = [_]struct { label: [:0]const u8, mode: state.ViewMode }{
+        .{ .label = "2D", .mode = .planner_2d },
+        .{ .label = "3D", .mode = .planner_3d },
+    };
 
-    pub fn reset(self: *Iter) void {
-        self.val = self.start_val;
+    for (tabs, 0..) |tab, i| {
+        const x = start_x + @as(f32, @floatFromInt(i)) * (tab_w + 4);
+        const rect = rl.Rectangle{ .x = x, .y = tab_y, .width = tab_w, .height = tab_h };
+        const is_active = s.view_mode == tab.mode;
+
+        rl.drawRectangleRec(rect, if (is_active) active_color else inactive_color);
+        rl.drawRectangleLinesEx(rect, 1, border_color);
+        rl.drawTextEx(s.font, tab.label, .{ .x = x + tab_w / 2 - (s.font_size * s.ui_scale / 2), .y = tab_y }, s.font_size * ui_scale, s.font_spacing * ui_scale, text_color);
+
+        if (rl.checkCollisionPointRec(rl.getMousePosition(), rect) and
+            rl.isMouseButtonPressed(.left))
+        {
+            s.view_mode = tab.mode;
+        }
     }
-};
+}
 
 pub fn drawRightPanel(s: *state.AppState, rp_x: f32, rp_y: f32, row: f32) !void {
     const bs = bodiesStr(s.selected_system);
     var row_num: Iter = .init(0);
-    const ui_scale = s.ui_scale;
-    const font_size = s.font_size;
+    const ui_scale = std.math.clamp(s.ui_scale, 0.25, 10.0);
+    const font_size = s.font_size * ui_scale;
     const rect_h = font_size + 4;
     const sys_dd_w: f32 = 150 * ui_scale;
     const sys_cb_w: f32 = 120 * ui_scale;
@@ -146,6 +157,7 @@ pub fn drawRightPanel(s: *state.AppState, rp_x: f32, rp_y: f32, row: f32) !void 
     const short_inp_w: f32 = 80 * ui_scale;
     const check_box_w: f32 = 24 * ui_scale;
     const elem_space: f32 = 10 * ui_scale; //px
+    const row_space: f32 = row * ui_scale;
 
     _ = rg.comboBox(.init(rp_x + sys_dd_w + elem_space, rp_y, sys_cb_w, rect_h), systems_str, &s.selected_system);
     if (s.selected_system != s.last_selected_system) {
@@ -155,7 +167,7 @@ pub fn drawRightPanel(s: *state.AppState, rp_x: f32, rp_y: f32, row: f32) !void 
     }
 
     if (rg.valueBoxFloat(
-        .init(rp_x, rp_y + row * row_num.next(f32), long_inp_w, rect_h),
+        .init(rp_x, rp_y + row_space * row_num.next(f32), long_inp_w, rect_h),
         "Target Ap (m): ",
         &s.ap_txt,
         &s.ap,
@@ -174,7 +186,7 @@ pub fn drawRightPanel(s: *state.AppState, rp_x: f32, rp_y: f32, row: f32) !void 
         }
     }
     if (rg.valueBoxFloat(
-        .init(rp_x, rp_y + row * row_num.next(f32), long_inp_w, rect_h),
+        .init(rp_x, rp_y + row_space * row_num.next(f32), long_inp_w, rect_h),
         "Target Pe (m): ",
         &s.pe_txt,
         &s.pe,
@@ -193,7 +205,7 @@ pub fn drawRightPanel(s: *state.AppState, rp_x: f32, rp_y: f32, row: f32) !void 
     }
 
     if (rg.valueBoxFloat(
-        .init(rp_x, rp_y + row * row_num.next(f32), short_inp_w, rect_h),
+        .init(rp_x, rp_y + row_space * row_num.next(f32), short_inp_w, rect_h),
         "Antecedent: ",
         &s.antecedent_txt,
         &s.t_antecedent,
@@ -203,7 +215,7 @@ pub fn drawRightPanel(s: *state.AppState, rp_x: f32, rp_y: f32, row: f32) !void 
     }
 
     if (rg.valueBoxFloat(
-        .init(rp_x, rp_y + row * row_num.next(f32), long_inp_w, rect_h),
+        .init(rp_x, rp_y + row_space * row_num.next(f32), long_inp_w, rect_h),
         "Consequent: ",
         &s.consequent_txt,
         &s.t_consequent,
@@ -230,16 +242,10 @@ pub fn drawRightPanel(s: *state.AppState, rp_x: f32, rp_y: f32, row: f32) !void 
         }
     }
 
-    if (rg.checkBox(
-        .init(rp_x, rp_y + row * row_num.next(f32), check_box_w, check_box_w),
-        "Dive Orbit",
-        &s.dive_orbit,
-    )) {}
-
     if (s.view_mode == .planner_3d) {
         if (rg.valueBoxFloat(
-            .init(rp_x, rp_y + row * row_num.next(f32), long_inp_w, rect_h),
-            "Inclination",
+            .init(rp_x, rp_y + row_space * row_num.next(f32), long_inp_w, rect_h),
+            "Inclination: ",
             &s.incl_txt,
             &s.incl,
             s.edit_incl,
@@ -256,8 +262,8 @@ pub fn drawRightPanel(s: *state.AppState, rp_x: f32, rp_y: f32, row: f32) !void 
             }
         }
         if (rg.valueBoxFloat(
-            .init(rp_x, rp_y + row * row_num.next(f32), long_inp_w, rect_h),
-            "Arg. of Peri",
+            .init(rp_x, rp_y + row_space * row_num.next(f32), long_inp_w, rect_h),
+            "Arg. of Peri: ",
             &s.arg_pe_txt,
             &s.arg_pe,
             s.edit_arg_pe,
@@ -273,10 +279,17 @@ pub fn drawRightPanel(s: *state.AppState, rp_x: f32, rp_y: f32, row: f32) !void 
                 ) catch 0;
             }
         }
+
         if (rg.checkBox(
-            .init(rp_x, rp_y + row * row_num.next(f32), check_box_w, check_box_w),
-            "Show Lines",
+            .init(rp_x, rp_y + row_space * row_num.next(f32), check_box_w, check_box_w),
+            " Show Lines",
             &s.show_lines,
+        )) {}
+
+        if (rg.checkBox(
+            .init(rp_x, rp_y + row_space * row_num.next(f32), check_box_w, check_box_w),
+            " Dive Orbit",
+            &s.dive_orbit,
         )) {}
     }
 
@@ -320,8 +333,8 @@ pub fn drawBottomBar(
         s.font,
         apo_txt,
         .init(@floatFromInt(col), @floatFromInt(bot_y)),
-        s.font_size,
-        s.font_spacing,
+        s.font_size * s.ui_scale,
+        s.font_spacing * s.ui_scale,
         .ray_white,
     );
 
@@ -337,8 +350,8 @@ pub fn drawBottomBar(
         s.font,
         peri_txt,
         .init(@floatFromInt(col2), @floatFromInt(bot_y)),
-        s.font_size,
-        s.font_spacing,
+        s.font_size * s.ui_scale,
+        s.font_spacing * s.ui_scale,
         .ray_white,
     );
 
@@ -353,8 +366,8 @@ pub fn drawBottomBar(
         s.font,
         dv_txt,
         .init(@floatFromInt(col3), @floatFromInt(bot_y)),
-        s.font_size,
-        s.font_spacing,
+        s.font_size * s.ui_scale,
+        s.font_spacing * s.ui_scale,
         .magenta,
     );
 
@@ -369,8 +382,8 @@ pub fn drawBottomBar(
         s.font,
         res_p_txt,
         .init(@floatFromInt(col), @floatFromInt(bot_y + 50)),
-        s.font_size,
-        s.font_spacing,
+        s.font_size * s.ui_scale,
+        s.font_spacing * s.ui_scale,
         res_color,
     );
 
@@ -384,9 +397,9 @@ pub fn drawBottomBar(
     rl.drawTextEx(
         s.font,
         targ_p_txt,
-        .init(@floatFromInt(col2), @floatFromInt(bot_y + 50)),
-        s.font_size,
-        s.font_spacing,
+        .init(@as(f32, @floatFromInt(col2)), @as(f32, @floatFromInt(bot_y + 50))),
+        s.font_size * s.ui_scale,
+        s.font_spacing * s.ui_scale,
         targ_color,
     );
 
@@ -423,3 +436,31 @@ pub fn periodToHMS(period: f64) HoursMinutesSeconds {
         .seconds = @intCast(total_secs % 60),
     };
 }
+
+const Iter = struct {
+    val: usize,
+    start_val: usize,
+
+    pub fn init(start_val: usize) Iter {
+        return .{
+            .val = 0,
+            .start_val = start_val,
+        };
+    }
+
+    pub fn next(self: *Iter, T: type) T {
+        const init_val: usize = self.val;
+        const new_val: usize = init_val + 1;
+        self.val = new_val;
+        errdefer self.val = init_val;
+        return switch (@typeInfo(T)) {
+            .int => @as(T, @intCast(new_val)),
+            .float => @as(T, @floatFromInt(new_val)),
+            else => @compileError("Invalid Type Conversion"),
+        };
+    }
+
+    pub fn reset(self: *Iter) void {
+        self.val = self.start_val;
+    }
+};
