@@ -9,12 +9,15 @@ pub const ViewMode = enum {
 
 pub const AppState = struct {
     // Window
-    screen_width: i32 = 1920,
-    screen_height: i32 = 1080,
-    scr_w: i32 = 1920,
-    scr_h: i32 = 1080,
+    screen_width: i32,
+    screen_height: i32,
+    scr_w: i32,
+    scr_h: i32,
+    ui_scale: f32,
+    ui_scale_txt: [6:0]u8,
     width_edit: bool,
     height_edit: bool,
+    ui_scale_edit: bool,
     show_settings: bool,
 
     // View
@@ -86,6 +89,9 @@ pub const AppState = struct {
             .screen_height = screen_height,
             .scr_w = screen_width,
             .scr_h = screen_height,
+            .ui_scale = 1.0,
+            .ui_scale_txt = std.mem.zeroes([6:0]u8),
+            .ui_scale_edit = false,
 
             .width_edit = false,
             .height_edit = false,
