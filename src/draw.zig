@@ -96,8 +96,8 @@ pub fn drawOrbit3D(
     const step = std.math.tau / @as(f64, @floatFromInt(n));
 
     // Precompute rotation angles
-    const ci = @cos(incl);
-    const si = @sin(incl);
+    const ci = @cos(std.math.degreesToRadians(incl));
+    const si = @sin(std.math.degreesToRadians(incl));
     const cl = @cos(lan);
     const sl = @sin(lan);
     const cw = @cos(aop);
@@ -112,21 +112,23 @@ pub fn drawOrbit3D(
         const px = r * @cos(nu);
         const py = r * @sin(nu);
 
-        // Rotate by AoP, inclination, LAN
+        // 1. AoP rotation (in orbital plane, around z)
         const x1 = cw * px - sw * py;
         const y1 = sw * px + cw * py;
-        // Inclination rotation (around x-axis)
+
+        // 2. Inclination (around x-axis of orbital plane)
         const x2 = x1;
         const y2 = ci * y1;
         const z2 = si * y1;
-        // LAN rotation (around z-axis)
+
+        // 3. LAN rotation (around z-axis of inertial frame)
         const x3 = cl * x2 - sl * y2;
         const y3 = sl * x2 + cl * y2;
         const z3 = z2;
 
         const pt = rl.Vector3{
             .x = @floatCast(x3 * scale),
-            .y = @floatCast(z3 * scale), // y-up in raylib
+            .y = @floatCast(z3 * scale), // z is up in inertial, y is up in raylib
             .z = @floatCast(y3 * scale),
         };
 

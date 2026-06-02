@@ -59,10 +59,43 @@ pub fn drawView(s: *state.AppState) !void {
 
     // Planet
     const planet_pos: rl.Vector3 = .{ .x = 0, .y = 0, .z = 0 };
-    rl.drawSphereEx(planet_pos, planet_r, 64, 64, draw.bodyColor(s.body));
-    if (s.show_lines) rl.drawSphereWires(planet_pos, planet_r + 0.1, 32, 32, .black);
+    if (s.show_lines) {
+        const shader = s.latlong_shader;
+        const lineWidthLoc = rl.getShaderLocation(shader, "lineWidth");
+        const gridColorLoc = rl.getShaderLocation(shader, "gridColor");
+        const baseColorLoc = rl.getShaderLocation(shader, "baseColor");
+        const latLoc = rl.getShaderLocation(shader, "latLines");
+        const lonLoc = rl.getShaderLocation(shader, "lonLines");
 
-    draw.drawOrbit3D(t_orbit.semi_major_axis * scale, t_orbit.eccentricity, s.incl, 0.0, 0.0, 1.0, targ_color, 128);
+        // Set values
+        var lineWidth: f32 = 0.0008;
+        var latLines: i32 = 18;
+        var lonLines: i32 = 36;
+
+        const body_color = draw.bodyColor(s.body);
+        var baseColor = [4]f32{
+            @as(f32, @floatFromInt(body_color.r)) / 255.0,
+            @as(f32, @floatFromInt(body_color.g)) / 255.0,
+            @as(f32, @floatFromInt(body_color.b)) / 255.0,
+            @as(f32, @floatFromInt(body_color.a)) / 255.0,
+        };
+        var gridColor = [4]f32{ 0, 0, 0, 1 };
+
+        rl.setShaderValue(shader, lineWidthLoc, &lineWidth, .float);
+        rl.setShaderValue(shader, latLoc, &latLines, .int);
+        rl.setShaderValue(shader, lonLoc, &lonLines, .int);
+        rl.setShaderValue(shader, gridColorLoc, &gridColor, .vec4);
+        rl.setShaderValue(shader, baseColorLoc, &baseColor, .vec4);
+
+        // Draw
+        rl.beginShaderMode(shader);
+        rl.drawSphereEx(planet_pos, planet_r, 64, 64, body_color);
+        rl.endShaderMode();
+    } else {
+        rl.drawSphereEx(planet_pos, planet_r, 64, 64, draw.bodyColor(s.body));
+    }
+
+    draw.drawOrbit3D(t_orbit.semi_major_axis * scale, t_orbit.eccentricity, s.incl, 0.0, t_orbit.arg_of_periapsis, 1.0, targ_color, 128);
 
     rl.drawLine3D(.{ .x = 0.0, .y = planet_r, .z = 0.0 }, .{ .x = 0.0, .y = planet_r + 5.0, .z = 0.0 }, .red);
     rl.drawLine3D(.{ .x = 0.0, .y = -planet_r, .z = 0.0 }, .{ .x = 0.0, .y = -planet_r - 5.0, .z = 0.0 }, .blue);

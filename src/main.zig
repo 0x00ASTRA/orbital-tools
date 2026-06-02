@@ -11,6 +11,8 @@ const font_data = @embedFile("assets/fonts/nasalization/Nasalization.otf");
 const atmo2d_shader_src = @embedFile("assets/shaders/atmo2d.fs");
 const atmo3d_shader_src = @embedFile("assets/shaders/atmo3d.fs");
 const backdrop_shader_src = @embedFile("assets/shaders/backdrop.fs");
+const latlong_frag_shader_src = @embedFile("assets/shaders/latlong.fs");
+const latlong_vert_shader_src = @embedFile("assets/shaders/latlong.vs");
 
 pub fn main(init: std.process.Init) anyerror!void {
     const io = init.io;
@@ -45,6 +47,8 @@ pub fn main(init: std.process.Init) anyerror!void {
     defer rl.unloadShader(atmo3d_shader);
     const backdrop_shader = rl.loadShaderFromMemory(null, backdrop_shader_src) catch @panic("Failed to load backdrop shader");
     defer rl.unloadShader(backdrop_shader);
+    const latlong_shader = rl.loadShaderFromMemory(latlong_vert_shader_src, latlong_frag_shader_src) catch @panic("Failed to load latlong shader");
+    defer rl.unloadShader(latlong_shader);
 
     rl.setTargetFPS(60);
     rg.loadStyleDefault();
@@ -54,7 +58,7 @@ pub fn main(init: std.process.Init) anyerror!void {
     rg.setStyle(.default, .{ .default = .text_size }, 24);
     defer rg.setStyle(.default, .{ .default = .text_size }, original_size);
 
-    var s = state.AppState.init(font, atmo2d_shader, atmo3d_shader, backdrop_shader, screen_width, screen_height);
+    var s = state.AppState.init(font, atmo2d_shader, atmo3d_shader, backdrop_shader, latlong_shader, screen_width, screen_height);
 
     while (!rl.windowShouldClose()) {
         // Update active view
