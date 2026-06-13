@@ -95,7 +95,11 @@ pub fn drawView(s: *state.AppState) !void {
         rl.drawSphereEx(planet_pos, planet_r, 64, 64, draw.bodyColor(s.body));
     }
 
-    draw.drawOrbit3D(t_orbit.semi_major_axis * scale, t_orbit.eccentricity, s.incl, 0.0, t_orbit.arg_of_periapsis, 1.0, targ_color, 128);
+    var segments: i32 = 512;
+    const ecc_mod: f32 = 1.0 + @as(f32, @floatCast(t_orbit.eccentricity));
+    segments += @as(i32, @trunc(ecc_mod)) * segments;
+
+    draw.drawOrbit3D(t_orbit.semi_major_axis * scale, t_orbit.eccentricity, s.incl, 0.0, t_orbit.arg_of_periapsis, 1.0, targ_color, segments);
 
     rl.drawLine3D(.{ .x = 0.0, .y = planet_r, .z = 0.0 }, .{ .x = 0.0, .y = planet_r + 5.0, .z = 0.0 }, .red);
     rl.drawLine3D(.{ .x = 0.0, .y = -planet_r, .z = 0.0 }, .{ .x = 0.0, .y = -planet_r - 5.0, .z = 0.0 }, .blue);
@@ -112,7 +116,7 @@ pub fn drawView(s: *state.AppState) !void {
         aop,
         1.0,
         res_color,
-        128,
+        segments,
     );
 
     // Atmosphere
