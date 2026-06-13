@@ -59,13 +59,13 @@ pub fn main(init: std.process.Init) anyerror!void {
     defer rl.unloadShader(latlong_shader);
 
     rl.setTargetFPS(60);
-    loadStyleFromMemory(gpa, style_src) catch {
+    loadStyleFromMemory(gpa, style_src) catch |err| {
         var std_err_buf: [128]u8 = undefined;
         var stderr_writer = std.Io.File.stderr().writer(io, &std_err_buf);
         defer stderr_writer.flush() catch {};
 
         const stderr = &stderr_writer.interface;
-        stderr.print("Failed to load custom style from memory\n", .{}) catch {};
+        stderr.print("\n\x1b[31m[ERROR]:\x1b[0m Failed to load custom style from memory: \x1b[4;31m{s}\x1b[0m\n\n", .{@errorName(err)}) catch {};
     };
     // rg.loadStyle("src/assets/styles/orbits.rgs");
     rg.setFont(font);
